@@ -62,9 +62,9 @@ func handlePkgs(t *depth.Tree, pkgs []string, outputJSON bool, explainPkg string
 			return err
 		}
 
-		for _, d := range (*t.Root).Deps {
-			fmt.Println(d)
-		}
+		// for _, d := range (*t.Root).Deps {
+		// 	fmt.Println(d)
+		// }
 
 		if outputJSON {
 			writePkgJSON(os.Stdout, *t.Root)
@@ -76,6 +76,7 @@ func handlePkgs(t *depth.Tree, pkgs []string, outputJSON bool, explainPkg string
 			continue
 		}
 
+		generateGraph(*t.Root)
 		// writePkg(os.Stdout, *t.Root)
 		// writePkgSummary(os.Stdout, *t.Root)
 	}
@@ -88,12 +89,27 @@ func generateGraph(pkg depth.Pkg) {
 	adjlist := make(map[string][]string)
 
 	for _, p := range pkg.Deps {
-		generateGraphRec(p, adjlist)
+		_, ok := adjlist[p.Name]
+		if !ok {
+			adjlist[p.Name] = make([]string, 0)
+		}
+		generateGraphRec(p, p.Name, adjlist)
 	}
+
+	fmt.Println(adjlist)
 }
 
-func generateGraphRec(pkg depth.Pkg, adjList map[string][]string) {
+func generateGraphRec(pkg depth.Pkg, parent string, adjlist map[string][]string) {
 
+	for _, p := range pkg.Deps {
+		_, ok := adjlist[p.Name]
+		if !ok {
+			adjlist[p.Name] = make([]string, 0)
+		}
+
+		adjlist[parent] = append(adjlist[parent], p.Name)
+		generateGraphRec(p, p.Name, adjlist)
+	}
 }
 
 // writePkgSummary writes a summary of all packages in a tree
