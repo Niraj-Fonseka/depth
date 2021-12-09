@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/KyleBanks/depth"
+	"depth"
 )
 
 const (
@@ -29,6 +29,7 @@ type summary struct {
 
 func main() {
 	t, pkgs := parse(os.Args[1:])
+
 	if err := handlePkgs(t, pkgs, outputJSON, explainPkg); err != nil {
 		os.Exit(1)
 	}
@@ -61,6 +62,10 @@ func handlePkgs(t *depth.Tree, pkgs []string, outputJSON bool, explainPkg string
 			return err
 		}
 
+		for _, d := range (*t.Root).Deps {
+			fmt.Println(d)
+		}
+
 		if outputJSON {
 			writePkgJSON(os.Stdout, *t.Root)
 			continue
@@ -71,10 +76,24 @@ func handlePkgs(t *depth.Tree, pkgs []string, outputJSON bool, explainPkg string
 			continue
 		}
 
-		writePkg(os.Stdout, *t.Root)
-		writePkgSummary(os.Stdout, *t.Root)
+		// writePkg(os.Stdout, *t.Root)
+		// writePkgSummary(os.Stdout, *t.Root)
 	}
 	return nil
+}
+
+// generateGraph creates a node graph and renders it as a file
+func generateGraph(pkg depth.Pkg) {
+	//generate adjacency list
+	adjlist := make(map[string][]string)
+
+	for _, p := range pkg.Deps {
+		generateGraphRec(p, adjlist)
+	}
+}
+
+func generateGraphRec(pkg depth.Pkg, adjList map[string][]string) {
+
 }
 
 // writePkgSummary writes a summary of all packages in a tree
